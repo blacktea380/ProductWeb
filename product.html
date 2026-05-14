@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force-Shift: Next Gen Shifting System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. SETUP & CORE DESIGN */
+        * { box-sizing: border-box; }
+        body {
+            background-color: #0a0a0c;
+            margin: 0;
+            padding: 20px 0;
+            display: grid;
+            gap: 20px;
+            place-items: center;
+            font-family: 'Lato', sans-serif;
+        }
+
+        .slide-container {
+            width: 1280px;
+            height: 720px;
+            background-color: #111114;
+            color: #f8fafc;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 60px;
+            border-radius: 4px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* Background Decorative Element: Abstract Flowing Lines */
+        .slide-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.05) 0%, transparent 40%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        h1, h2, h3 { font-family: 'Poppins', sans-serif; margin: 0; position: relative; z-index: 1; }
+        p, li { font-size: 20px; line-height: 1.6; color: #cbd5e1; position: relative; z-index: 1; }
+
+        .slide-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #ffffff;
+            border-left: 6px solid #22c55e;
+            padding-left: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 2. LAYOUTS */
+        .title-layout { text-align: center; justify-content: center; height: 100%; }
+        .title-layout h1 { font-size: 85px; color: #ffffff; margin-bottom: 20px; line-height: 1.1; }
+        .title-layout h1 span { color: #22c55e; }
+        .title-layout .subtitle { font-size: 28px; color: #94a3b8; font-weight: 300; }
+
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; width: 100%; align-items: center; }
+
+        .image-wrapper { 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
+            height: 400px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        .tile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; width: 100%; }
+        .tile { 
+            background: rgba(255,255,255,0.03); 
+            padding: 40px; 
+            border-radius: 16px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+        }
+        .tile .icon { font-size: 45px; color: #22c55e; margin-bottom: 25px; }
+        .tile h3 { font-size: 26px; margin-bottom: 15px; color: #ffffff; }
+
+        /* Table Design */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 20px; }
+        th { text-align: left; padding: 25px; background: rgba(34, 197, 94, 0.1); color: #22c55e; font-weight: 700; border-bottom: 2px solid #22c55e; }
+        td { padding: 25px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        /* Chart Elements */
+        .bar-chart { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        .bar-row { display: flex; align-items: center; gap: 20px; }
+        .bar-label { width: 250px; text-align: right; font-weight: 700; color: #94a3b8; }
+        .bar-outer { flex-grow: 1; height: 35px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden; }
+        .bar-inner { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); border-radius: 20px; display: flex; align-items: center; padding-left: 15px; color: #000; font-weight: 700; }
+
+        /* Bleed Image Layout */
+        .slide-container.bleed-image-layout { display: grid; grid-template-columns: 1fr 1fr; padding: 0; align-items: start; }
+        .bleed-image-layout .content-container { padding: 80px; }
+        .bleed-image-side { height: 720px; width: 100%; object-fit: cover; }
+
+        /* Highlight Number */
+        .highlight-number { font-size: 140px; font-weight: 700; color: #22c55e; line-height: 1; margin-bottom: 10px; }
+        .number-label { font-size: 32px; color: #ffffff; font-weight: 400; }
+
+        /* Timeline */
+        .timeline { display: flex; justify-content: space-between; position: relative; margin-top: 100px; }
+        .timeline::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
+        .timeline-item { width: 22%; text-align: center; position: relative; }
+        .timeline-dot { width: 24px; height: 24px; background: #22c55e; border-radius: 50%; margin: 0 auto 30px; position: relative; z-index: 2; box-shadow: 0 0 15px #22c55e; }
+        .timeline-item h3 { color: #ffffff; margin-bottom: 10px; font-size: 22px; }
+
+        /* Slide visibility and transitions */
+        #slides-wrapper { position: relative; width: 1280px; height: 720px; }
+        .slide-container { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; opacity: 0; transform: translateY(20px); transition: opacity 400ms ease, transform 400ms ease; pointer-events: none; }
+        .slide-container.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        /* Navigation controls */
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; z-index: 5; }
+        #prevBtn { left: -24px; }
+        #nextBtn { right: -24px; }
+        .dots { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 6; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.25); cursor: pointer; }
+        .dot.active { background: #22c55e; }
+
+    </style>
+</head>
+<body>
+
+<div id="slides-wrapper">
+
+<div class="slide-container active" id="slide1">
+    <div class="title-layout">
+        <h1>FORCE-<span>SHIFT</span></h1>
+        <div class="subtitle">次世代智慧感測變速系統：定義力量的節奏</div>
+        <p style="margin-top: 40px; color: #64748b;">電子變速的新紀元 — 力量 × 迴轉速 × 可程式化邏輯</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide2">
+    <h2 class="slide-title">現狀：缺乏「靈魂」的自動化</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 30px;"><i class="fa-solid fa-circle-xmark" style="color: #ef4444; margin-right: 15px;"></i><strong>單一維度判斷：</strong> 僅依賴迴轉速 (RPM)，忽略騎士當下的真實負載與扭力。</li>
+                    <li style="margin-bottom: 30px;"><i class="fa-solid fa-circle-xmark" style="color: #ef4444; margin-right: 15px;"></i><strong>封閉預設邏輯：</strong> 變速規則由廠商決定，無法根據生理特質進行深度優化。</li>
+                    <li style="margin-bottom: 30px;"><i class="fa-solid fa-circle-xmark" style="color: #ef4444; margin-right: 15px;"></i><strong>通訊延遲瓶頸：</strong> 傳統協定在高干擾環境下的穩定性與反應速度受限。</li>
+                </ul>
+            </div>
+            <div class="image-wrapper">
+                <img src="https://posedla.eu/cdn/shop/articles/DSC06646.jpg?v=1777055167&width=2560" alt="Cyclist Climbing">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide3">
+    <h2 class="slide-title">解決方案：雙輸入感測引擎</h2>
+    <div class="content-area">
+        <div class="tile-grid">
+            <div class="tile">
+                <div class="icon"><i class="fa-solid fa-bolt"></i></div>
+                <h3>力量感測 (Force)</h3>
+                <p>整合高精度應變片，偵測踩踏瓦數與扭力輸出，感知「你踩得多重」。</p>
+            </div>
+            <div class="tile">
+                <div class="icon"><i class="fa-solid fa-arrows-spin"></i></div>
+                <h3>迴轉速 (RPM)</h3>
+                <p>精準紀錄每分鐘轉速，維持最佳生理效能區間。</p>
+            </div>
+            <div class="tile" style="background: rgba(34, 197, 94, 0.1); border-color: #22c55e;">
+                <div class="icon"><i class="fa-solid fa-brain"></i></div>
+                <h3>可程式化算法</h3>
+                <p>結合雙重數據，使用者可自定義變速門檻，實現真正「情境感知」。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container bleed-image-layout" id="slide4">
+    <div class="content-container">
+        <h2 class="slide-title">核心技術：ExpressLRS</h2>
+        <div class="content-area">
+            <h3>超越極限的通訊頻寬</h3>
+            <p>引進穿越機等級的開源無線通訊協定，具備 **1000Hz 刷新率** 與 **極低延遲** 特性。</p>
+            <ul style="margin-top: 20px;">
+                <li><strong>抗干擾跳頻：</strong> 在數百台單車交會中依然穩定。</li>
+                <li><strong>快速反應：</strong> 延遲僅為傳統系統的 1/10。</li>
+                <li><strong>開源自由：</strong> 韌體升級快速，不受大廠綁架。</li>
+            </ul>
+        </div>
+    </div>
+    <img class="bleed-image-side" src="https://www.detecon.com/wp-content/uploads/2026/02/Keyviusal_5G_Campus_Networks_3134_1520_V2-scaled.jpg" alt="Wireless Tech">
+</div>
+
+<div class="slide-container" id="slide5">
+    <h2 class="slide-title">產品特色：全方位的控制權</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div class="image-wrapper" style="height: 450px;">
+                <img src="https://masibikes.tw/cdn/shop/files/EVO_LUZT_1_Blue_D3.jpg?v=1742959818&width=1946" alt="Derailleur Hardware">
+            </div>
+            <div class="bullet-list">
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #22c55e;"><i class="fa-solid fa-sliders"></i> 使用者可程式邏輯</h3>
+                    <p>自由設定：當力量 > Y 且 RPM < 80 時自動降檔。</p>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #22c55e;"><i class="fa-solid fa-route"></i> 多樣化地形設定檔</h3>
+                    <p>針對爬坡、平地、衝刺建立專屬變速邏輯庫。</p>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #22c55e;"><i class="fa-solid fa-puzzle-piece"></i> 開放生態系相容</h3>
+                    <p>相容主流飛輪與曲柄，無需整車汰換。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide6">
+    <h2 class="slide-title">軟體賦能：Force-Shift App</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <h3>數據即控制</h3>
+                <p>透過直覺的圖形化介面，騎士可以拉動曲線來調整變速靈敏度與時機。這不再是盲目變速，而是數據驅動的體力管理。</p>
+                <p style="margin-top: 20px; font-style: italic; color: #94a3b8;">「像調整電子避震一樣精確，調整你的傳動效率。」</p>
+            </div>
+            <div class="image-wrapper" style="border-radius: 40px; height: 500px; width: 300px; margin: 0 auto;">
+                <img src="https://res.cloudinary.com/ducxztw9n/image/upload/c_limit,w_3200/f_auto/q_auto/v1/mybike_sport_performance_meter_1540019d03?_a=BAVAZGAQ0" alt="App UI Interface">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide7">
+    <h2 class="slide-title">競爭優勢對照表</h2>
+    <div class="content-area">
+        <table>
+            <thead>
+                <tr>
+                    <th>功能特性</th>
+                    <th>Force-Shift (我們)</th>
+                    <th>傳統電子變速 (S/S 牌)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>感測輸入</strong></td>
+                    <td style="color: #22c55e;">力量 + 迴轉速 (雙參數)</td>
+                    <td>單純迴轉速 (單參數)</td>
+                </tr>
+                <tr>
+                    <td><strong>變速邏輯</strong></td>
+                    <td style="color: #22c55e;">使用者完全可程式化</td>
+                    <td>封閉式預設邏輯</td>
+                </tr>
+                <tr>
+                    <td><strong>無線通訊</strong></td>
+                    <td style="color: #22c55e;">ExpressLRS (1ms 延遲)</td>
+                    <td>專有協定 (15-50ms 延遲)</td>
+                </tr>
+                <tr>
+                    <td><strong>生態系統</strong></td>
+                    <td style="color: #22c55e;">開源開放、高度相容</td>
+                    <td>封閉式系統、組件綁定</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="slide-container" id="slide8">
+    <h2 class="slide-title">性能實測：反應速度對比</h2>
+    <div class="content-area">
+        <div class="bar-chart">
+            <div class="bar-row">
+                <div class="bar-label">Force-Shift (ELRS)</div>
+                <div class="bar-outer"><div class="bar-inner" style="width: 95%;">5ms 響應時間</div></div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-label">現行無線系統 A</div>
+                <div class="bar-outer"><div class="bar-inner" style="width: 40%; background: #475569; color: #fff;">25ms 響應時間</div></div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-label">現行無線系統 B</div>
+                <div class="bar-outer"><div class="bar-inner" style="width: 25%; background: #475569; color: #fff;">45ms 響應時間</div></div>
+            </div>
+        </div>
+        <p style="text-align: center; margin-top: 40px; font-size: 18px; color: #94a3b8;">*實驗室數據測量感測器觸發至馬達啟動之時間差</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide9">
+    <h2 class="slide-title">誰需要 Force-Shift？</h2>
+    <div class="content-area">
+        <div class="tile-grid">
+            <div class="tile">
+                <h3 style="color: #22c55e;">競技選手</h3>
+                <p>極致體能釋放，讓系統在衝刺瞬間自動切換檔位，心無旁騖。</p>
+            </div>
+            <div class="tile">
+                <h3 style="color: #22c55e;">數據控騎士</h3>
+                <p>追求最佳化與效能微調，享受透過軟體掌控一切的快感。</p>
+            </div>
+            <div class="tile">
+                <h3 style="color: #22c55e;">長距離挑戰者</h3>
+                <p>建立節能 Profile，根據體力衰減自動調整變速門檻。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide10">
+    <h2 class="slide-title">市場潛力：2026 - 2030 展望</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <div class="highlight-number">48.1%</div>
+                <div class="number-label">電子變速市場年均成長率</div>
+                <p style="margin-top: 20px;">隨著功率計與智慧穿戴普及，市場正從「機械自動化」轉向「生物感知智慧化」。我們正站在這股浪潮的最前端。</p>
+            </div>
+            <div class="image-wrapper">
+                <img src="https://png.pngtree.com/png-vector/20251030/ourlarge/pngtree-cartoon-cyclist-sprinting-to-race-finish-line-in-high-speed-motion-png-image_17864768.webp" alt="Competitive Sprint">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide11">
+    <h2 class="slide-title">發展時程表</h2>
+    <div class="content-area">
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>2026 Q3</h3>
+                <p>首批 Beta 測試與社群封測</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>2027 Q1</h3>
+                <p>全球群眾募資啟動</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>2027 Q4</h3>
+                <p>專業車隊合作與實戰認證</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h3>2028</h3>
+                <p>全系列開源組件上市</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide12">
+    <div class="title-layout">
+        <h2 style="font-size: 60px; color: #22c55e;">QUESTIONS?</h2>
+        <p style="font-size: 24px; margin-top: 20px;">期待與您共同定義單車的未來</p>
+        <div style="margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 40px; font-size: 18px; color: #64748b;">
+            Force-Shift Official Launch | 2026
+        </div>
+    </div>
+</div>
+
+</div> <!-- end slides-wrapper -->
+
+<!-- Navigation controls -->
+<button id="prevBtn" class="nav-btn" aria-label="Previous">◀</button>
+<button id="nextBtn" class="nav-btn" aria-label="Next">▶</button>
+<div class="dots" id="dots"></div>
+
+<script>
+    (function(){
+        const slides = Array.from(document.querySelectorAll('.slide-container'));
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsEl = document.getElementById('dots');
+        let idx = 0;
+        let wheelTimer = null;
+
+        function renderDots(){
+            dotsEl.innerHTML = '';
+            slides.forEach((s, i) => {
+                const d = document.createElement('div');
+                d.className = 'dot' + (i===idx ? ' active' : '');
+                d.addEventListener('click', ()=> show(i));
+                dotsEl.appendChild(d);
+            });
+        }
+
+        function show(n){
+            if(n<0) n = slides.length-1;
+            if(n>=slides.length) n = 0;
+            slides.forEach((s,i)=> s.classList.toggle('active', i===n));
+            idx = n;
+            renderDots();
+        }
+
+        function next(){ show(idx+1); }
+        function prev(){ show(idx-1); }
+
+        prevBtn.addEventListener('click', prev);
+        nextBtn.addEventListener('click', next);
+
+        // keyboard
+        window.addEventListener('keydown', (e)=>{
+            if(e.key === 'ArrowRight') next();
+            if(e.key === 'ArrowLeft') prev();
+        });
+
+        // wheel (debounced)
+        window.addEventListener('wheel', (e)=>{
+            if(wheelTimer) return;
+            wheelTimer = setTimeout(()=> wheelTimer = null, 200);
+            if(e.deltaY > 0) next(); else prev();
+        }, {passive: true});
+
+        // touch swipe
+        let touchStartX = 0, touchStartY = 0;
+        window.addEventListener('touchstart', (e)=>{
+            const t = e.touches[0]; touchStartX = t.clientX; touchStartY = t.clientY;
+        }, {passive:true});
+        window.addEventListener('touchend', (e)=>{
+            const t = e.changedTouches[0];
+            const dx = t.clientX - touchStartX; const dy = t.clientY - touchStartY;
+            if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30){ if(dx < 0) next(); else prev(); }
+        }, {passive:true});
+
+        // init
+        renderDots();
+        show(0);
+    })();
+</script>
+
+</body>
+</html>
