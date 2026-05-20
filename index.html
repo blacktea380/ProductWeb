@@ -129,15 +129,16 @@
         .timeline-dot { width: 24px; height: 24px; background: #22c55e; border-radius: 50%; margin: 0 auto 30px; position: relative; z-index: 2; box-shadow: 0 0 15px #22c55e; }
         .timeline-item h3 { color: #ffffff; margin-bottom: 10px; font-size: 22px; }
 
-        /* Slide visibility and transitions */
-        #slides-wrapper { position: relative; width: 1280px; height: 720px; }
-        .slide-container { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; opacity: 0; transform: translateY(20px); transition: opacity 400ms ease, transform 400ms ease; pointer-events: none; }
+        /* Slide visibility and transitions (responsive 16:9) */
+        #slides-wrapper { position: relative; width: min(1280px, 95vw); aspect-ratio: 16/9; height: auto; margin: 0 auto; }
+        .slide-container { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; transform: translateY(20px); transition: opacity 400ms ease, transform 400ms ease; pointer-events: none; padding: clamp(16px, 4%, 60px); }
         .slide-container.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
         /* Navigation controls */
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; z-index: 5; }
-        #prevBtn { left: -24px; }
-        #nextBtn { right: -24px; }
+        #prevBtn { left: 8px; }
+        #nextBtn { right: 8px; }
+        #fullscreenBtn { right: 56px; top: 12px; width: 40px; height: 40px; transform: none; }
         .dots { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 6; }
         .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.25); cursor: pointer; }
         .dot.active { background: #22c55e; }
@@ -210,7 +211,7 @@
             </ul>
         </div>
     </div>
-    <img class="bleed-image-side" src="https://www.detecon.com/wp-content/uploads/2026/02/Keyviusal_5G_Campus_Networks_3134_1520_V2-scaled.jpg" alt="Wireless Tech">
+        <img class="bleed-image-side" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop" alt="Wireless Tech">
 </div>
 
 <div class="slide-container" id="slide5">
@@ -391,6 +392,7 @@
 <!-- Navigation controls -->
 <button id="prevBtn" class="nav-btn" aria-label="Previous">◀</button>
 <button id="nextBtn" class="nav-btn" aria-label="Next">▶</button>
+<button id="fullscreenBtn" class="nav-btn" aria-label="Fullscreen"><i class="fa-solid fa-expand"></i></button>
 <div class="dots" id="dots"></div>
 
 <script>
@@ -453,6 +455,25 @@
         // init
         renderDots();
         show(0);
+
+        // Fullscreen toggle for slides wrapper
+        const fsBtn = document.getElementById('fullscreenBtn');
+        const slidesWrapper = document.getElementById('slides-wrapper');
+        function updateFsIcon(){
+            if(document.fullscreenElement) fsBtn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+            else fsBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+        }
+        fsBtn.addEventListener('click', ()=>{
+            if(!document.fullscreenElement){
+                if(slidesWrapper.requestFullscreen) slidesWrapper.requestFullscreen();
+                else if(slidesWrapper.webkitRequestFullscreen) slidesWrapper.webkitRequestFullscreen();
+            } else {
+                if(document.exitFullscreen) document.exitFullscreen();
+                else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+        });
+        document.addEventListener('fullscreenchange', updateFsIcon);
+        updateFsIcon();
     })();
 </script>
 
